@@ -1,0 +1,80 @@
+buildscript {
+    repositories {
+        jcenter()
+        //shadow
+        maven { url "https://plugins.gradle.org/m2/" }
+    }
+    
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        //shadow 插件 打包所有输出类、资源、依赖项到一个JAR文件中并生成清单文件
+        //发布到Docker
+        classpath "com.github.jengelman.gradle.plugins:shadow:2.0.4"
+    }
+}
+apply plugin: 'java'
+apply plugin: 'kotlin'
+//shadow 插件
+apply plugin: 'com.github.johnrengelman.shadow'
+apply plugin: 'application'
+
+group 'com.geely.gic.hmi'
+version '0.0.1'
+//指定主类 运行入口
+mainClassName = "io.ktor.server.netty.EngineMain"
+
+sourceSets {
+    main.kotlin.srcDirs = main.java.srcDirs = ['src']
+    test.kotlin.srcDirs = test.java.srcDirs = ['test']
+    main.resources.srcDirs = ['resources']
+    test.resources.srcDirs = ['testresources']
+}
+
+repositories {
+    mavenLocal()
+    jcenter()
+    maven { url 'https://kotlin.bintray.com/ktor' }
+    maven { url 'https://kotlin.bintray.com/kotlin-js-wrappers' }
+}
+
+sourceCompatibility = 1.8
+compileKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}
+compileTestKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}
+dependencies {
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+    compile "io.ktor:ktor-server-netty:$ktor_version"
+    compile "ch.qos.logback:logback-classic:$logback_version"
+    compile "io.ktor:ktor-server-core:$ktor_version"
+    compile "io.ktor:ktor-html-builder:$ktor_version"
+    compile "org.jetbrains:kotlin-css-jvm:1.0.0-pre.31-kotlin-1.2.41"
+    compile "io.ktor:ktor-client-core:$ktor_version"
+    compile "io.ktor:ktor-client-core-jvm:$ktor_version"
+    compile "io.ktor:ktor-client-apache:$ktor_version"
+    //模板freemarker
+    compile "io.ktor:ktor-freemarker:$ktor_version"
+    //session
+    compile "io.ktor:ktor-server-sessions:$ktor_version"
+    //log
+    implementation 'org.slf4j:slf4j-api:1.7.26'
+
+    //DB
+    compile "mysql:mysql-connector-java:8.0.15"
+
+    testCompile "io.ktor:ktor-server-tests:$ktor_version"
+}
+
+kotlin.experimental.coroutines = 'enable'
+
+shadowJar {
+    baseName = 'hmi'
+    classifier = null
+    version = null
+}
+
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
+    kotlinOptions.freeCompilerArgs += ["-Xuse-experimental=kotlin.Experimental"]
+}
