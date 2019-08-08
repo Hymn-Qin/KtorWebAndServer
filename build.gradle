@@ -4,12 +4,12 @@ buildscript {
         //shadow
         maven { url "https://plugins.gradle.org/m2/" }
     }
-    
+
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         //shadow 插件 打包所有输出类、资源、依赖项到一个JAR文件中并生成清单文件
         //发布到Docker
-        classpath "com.github.jengelman.gradle.plugins:shadow:2.0.4"
+        classpath 'com.github.jengelman.gradle.plugins:shadow:5.0.0'
     }
 }
 apply plugin: 'java'
@@ -20,8 +20,8 @@ apply plugin: 'application'
 
 group 'com.geely.gic.hmi'
 version '0.0.1'
-//指定主类 运行入口
-mainClassName = "io.ktor.server.netty.EngineMain"
+//指定主类 运行入口 io.ktor.server.netty.EngineMain
+mainClassName = "com.geely.gic.hmi.ApplicationKt"
 
 sourceSets {
     main.kotlin.srcDirs = main.java.srcDirs = ['src']
@@ -46,23 +46,48 @@ compileTestKotlin {
 }
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+    //netty
     compile "io.ktor:ktor-server-netty:$ktor_version"
-    compile "ch.qos.logback:logback-classic:$logback_version"
     compile "io.ktor:ktor-server-core:$ktor_version"
+
+    //html-dsl
     compile "io.ktor:ktor-html-builder:$ktor_version"
     compile "org.jetbrains:kotlin-css-jvm:1.0.0-pre.31-kotlin-1.2.41"
+
     compile "io.ktor:ktor-client-core:$ktor_version"
     compile "io.ktor:ktor-client-core-jvm:$ktor_version"
     compile "io.ktor:ktor-client-apache:$ktor_version"
+    //gson
+    compile "io.ktor:ktor-gson:$ktor_version"
     //模板freemarker
     compile "io.ktor:ktor-freemarker:$ktor_version"
     //session
     compile "io.ktor:ktor-server-sessions:$ktor_version"
-    //log
+    //locations 路由
+    compile "io.ktor:ktor-locations:$ktor_version"
+
+    //log slf4j 接口包
     implementation 'org.slf4j:slf4j-api:1.7.26'
+
+    //logback
+    compile "ch.qos.logback:logback-core:$logback_version"
+    compile "ch.qos.logback:logback-classic:$logback_version"
+    compile "ch.qos.logback:logback-access:$logback_version"
+    //log4j
+    // <!--用于解决web环境下关闭服务器时可能出现的log4j线程无法及时关闭的warn，web工程需要包含log4j-web，非web工程不需要 -->
+//    compile 'org.apache.logging.log4j:log4j-web:2.12.0'
+//    //桥接包
+//    compile 'org.apache.logging.log4j:log4j-slf4j-impl:2.12.0'
+//    //接口包
+//    compile 'org.apache.logging.log4j:log4j-api:2.12.0'
+//    //核心包
+//    compile 'org.apache.logging.log4j:log4j-core:2.12.0'
 
     //DB
     compile "mysql:mysql-connector-java:8.0.15"
+
+    //webSocket
+    compile "io.ktor:ktor-websockets:$ktor_version"
 
     testCompile "io.ktor:ktor-server-tests:$ktor_version"
 }
@@ -70,7 +95,7 @@ dependencies {
 kotlin.experimental.coroutines = 'enable'
 
 shadowJar {
-    baseName = 'hmi'
+    baseName = 'my-application'
     classifier = null
     version = null
 }

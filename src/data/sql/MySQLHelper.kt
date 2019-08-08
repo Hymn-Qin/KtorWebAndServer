@@ -1,5 +1,6 @@
-package com.geely.gic.hmi
+package com.geely.gic.hmi.data.sql
 
+import com.geely.gic.hmi.utils.toJsonArray
 import org.slf4j.LoggerFactory
 import java.sql.DriverManager
 
