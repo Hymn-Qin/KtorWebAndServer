@@ -1,4 +1,4 @@
-package com.geely.gic.hmi
+package com.geely.gic.hmi.utils
 
 import java.sql.ResultSet
 
