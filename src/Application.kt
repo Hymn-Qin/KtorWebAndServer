@@ -22,18 +22,48 @@ import io.ktor.client.*
 import io.ktor.client.engine.apache.*
 import io.ktor.features.ContentNegotiation
 import io.ktor.features.PartialContent
+
+import com.geely.gic.hmi.route.user
+import com.geely.gic.hmi.utils.copyToSuspend
+import com.geely.gic.hmi.utils.expiration
+import com.geely.gic.hmi.utils.respondCss
+import io.ktor.application.Application
+import io.ktor.application.call
+import io.ktor.application.install
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.apache.Apache
 import io.ktor.freemarker.FreeMarker
 import io.ktor.freemarker.FreeMarkerContent
+import io.ktor.html.respondHtml
 import io.ktor.http.content.*
 import io.ktor.jackson.jackson
+import io.ktor.sessions.cookie
+import io.ktor.locations.Location
+import io.ktor.locations.Locations
+import io.ktor.request.receiveMultipart
+import io.ktor.response.respond
+import io.ktor.response.respondText
+import io.ktor.routing.Route
+import io.ktor.routing.get
+import io.ktor.routing.post
+import io.ktor.routing.routing
 import io.ktor.sessions.Sessions
 import io.ktor.sessions.cookie
+import io.ktor.sessions.directorySessionStorage
 import io.ktor.sessions.sessions
 import io.ktor.util.KtorExperimentalAPI
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.yield
+import kotlinx.css.Color
+import kotlinx.css.body
+import kotlinx.css.em
+import kotlinx.css.p
+import kotlinx.html.body
+import kotlinx.html.h1
+import kotlinx.html.li
+import kotlinx.html.ul
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.InputStream
@@ -51,8 +81,8 @@ fun main(args: Array<String>): Unit =
 fun Application.module(testing: Boolean = false) {
     val logger by lazy { LoggerFactory.getLogger(Application::class.java) }
 
+    logger.info("start application")
     val client = HttpClient(Apache) {
-
     }
 
 //    val htmlContent = client.get<String>("")
@@ -68,12 +98,30 @@ fun Application.module(testing: Boolean = false) {
         //        cookie<Session>("Session", directorySessionStorage(File(".sessions"))) {
 //            cookie.path = "/"
 //        }
+        //1).用cookie的方式 将 session 保存在本地
+        cookie<Session>("Session", directorySessionStorage(File(".sessions"))) {
+            cookie.path = "/"
+        }
         //directorySessionStorage() 来自 Ktor 的 Session 库，并且需要注意的是，directorySessionStorage()也是一个 Experimental 的 API，需要加入注解来使其能够顺利编译
         //表示了这个 Session 可以在文件系统里保存，并且作用范围是全站，即以 / 为路径的所有请求。
         // 这意味着我们可以通过请求路径来进行 Session 的隔离。
 
-        //只需要session
-        cookie<Session>("Session")
+        //只需要session 不需要保存的情况
+//        cookie<Session>("Session")
+        //2).另外一种请求方式，即把相关的数据放在 Header
+        //通常是用于 API 或 XHR 请求，这个时候我们可以使用 header() 来描述 Session
+//        header<Session>("Session") {
+//            transform(SessionTransportTransformerMessageAuthentication(SecretKeySpec(key, "HmacSHA256")))
+//            //key 是一个 ByteArray 对象，也就是加密用的 key，它可以是任意组合的 byte 串。后面的 HmacSHA256 是采用的算法
+//            // Ktor 官方文档内，用于 Header 的 transform 是 SessionTransportTransformerDigest，而这个类并不安全
+//            // 为了安全起见，应当使用此处的 SessionTransportTransformerMessageAuthentication 并配合相应的加密手段。
+//        }
+
+        //3).上面都两种都是将cookie写入服务端，将前两种结合，就拥有了写到客户端的 Cookie 了  将cookie保存在客户端
+//        cookie<Session>("Session") {
+//            val secretSignKey = hex("000102030405060708090a0b0c0d0e0f")
+//            transform(SessionTransportTransformerMessageAuthentication(secretSignKey))
+//        }
     }
 
     //8.启用部分内容特性 大文件和视频
@@ -108,6 +156,13 @@ fun Application.module(testing: Boolean = false) {
         jackson {
         }
     }
+    //7.安装webSocket
+//    install(WebSockets) {
+//        pingPeriod = Duration.ofMinutes(1)
+//    }
+
+    //8.安装路由 当我们的路由很多的时候，如果都写在一个文件里，不仅仅文件回变得很大，而且不利于维护和团队协作。所以有了另一个模块 locations
+    install(Locations) // 启用 Locations
 
     //路由代码块 配置路由特性 在代码块中指定路径与HTTP方法定义路由
     routing {
@@ -277,19 +332,34 @@ fun Application.module(testing: Boolean = false) {
     }
 
 }
+//            val s = call.sessions.get("Session") as? Session
+//            if (s == null || call.expiration()) {
+//                //生成session
+//                call.sessions.set("Session", Session("cookie", "init", System.currentTimeMillis()))
+//                call.respondText { "generated new session" }
+//            } else {
+//                call.respondText { "name: ${s.name}, data: ${s.data}" }
+//            }
+//        }
 
-fun FlowOrMetaDataContent.styleCss(builder: CSSBuilder.() -> Unit) {
-    style(type = ContentType.Text.CSS.toString()) {
-        +CSSBuilder().apply(builder).toString()
-    }
-}
 
-fun CommonAttributeGroupFacade.style(builder: CSSBuilder.() -> Unit) {
-    this.style = CSSBuilder().apply(builder).toString().trim()
-}
+        //7.webSocket 聊天室 chat/Application
 
-suspend inline fun ApplicationCall.respondCss(builder: CSSBuilder.() -> Unit) {
-    this.respondText(CSSBuilder().apply(builder).toString(), ContentType.Text.CSS)
+        //8.路由的使用
+//        user()
+//    }
+
+
+//}
+
+//该代码目前必须和 Application 在一起。
+@Location("/user")
+class User{
+    @Location("/login")
+    data class UserLogin(val username: String, val password: String)
+
+    @Location("/register")
+    data class UserRegister(val username: String, val password: String)
 }
 
 suspend fun InputStream.copyToSuspend(
