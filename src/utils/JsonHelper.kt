@@ -1,9 +1,13 @@
 package com.geely.gic.hmi.utils
 
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import java.sql.ResultSet
 
-class JsonHelper {
-}
+/**
+ * A Gson Builder with pretty printing enabled.
+ */
+val gson: Gson = GsonBuilder().setPrettyPrinting().create()
 
 fun ResultSet.toJsonArray(): String {
     var str = "["

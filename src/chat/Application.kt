@@ -2,32 +2,29 @@ package chat
 
 import chat.data.UserSession
 import com.geely.gic.hmi.chat.ChatServer
+import com.geely.gic.hmi.data.dao.DAOFacade
+import com.geely.gic.hmi.data.dao.initDao
 import com.geely.gic.hmi.data.model.Session
-import io.ktor.application.*
-import io.ktor.response.*
-import io.ktor.routing.*
-import io.ktor.http.*
-import kotlinx.html.*
-import kotlinx.css.*
-import io.ktor.client.*
-import io.ktor.client.engine.apache.*
+import io.ktor.application.Application
+import io.ktor.application.ApplicationCall
+import io.ktor.application.install
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.apache.Apache
 import io.ktor.http.cio.websocket.CloseReason
 import io.ktor.http.cio.websocket.Frame
 import io.ktor.http.cio.websocket.readText
-import io.ktor.sessions.*
+import io.ktor.routing.routing
+import io.ktor.sessions.Sessions
+import io.ktor.sessions.cookie
+import io.ktor.sessions.directorySessionStorage
+import io.ktor.sessions.sessions
 import io.ktor.util.pipeline.PipelineContext
 import io.ktor.websocket.WebSocketServerSession
 import io.ktor.websocket.WebSockets
 import io.ktor.websocket.webSocket
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.consumeEach
-import kotlinx.coroutines.withContext
-import kotlinx.coroutines.yield
 import org.slf4j.LoggerFactory
 import java.io.File
-import java.io.InputStream
-import java.io.OutputStream
 import java.time.Duration
 
 //main函数

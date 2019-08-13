@@ -1,17 +1,23 @@
-<html>
-<head>
-    <link rel="stylesheet" href="/static/styles.css">
-</head>
-<body>
-<#if error??>
-    <p style="color:red;">${error}</p>
-</#if>
-<form action="/login" method="post" enctype="application/x-www-form-urlencoded">
-    <div>User:</div>
-    <div><input type="text" name="username" /></div>
-    <div>Password:</div>
-    <div><input type="password" name="password" /></div>
-    <div><input type="submit" value="Login" /></div>
+<#-- @ftlvariable name="error" type="java.lang.String" -->
+<#-- @ftlvariable name="userId" type="java.lang.String" -->
+
+<#import "template.ftl" as layout />
+
+<@layout.mainLayout title="Welcome">
+<form class="pure-form-stacked" action="/web" method="post" enctype="application/x-www-form-urlencoded">
+    <#if error??>
+        <p class="error">${error}</p>
+    </#if>
+
+    <label for="userId">Login
+        <input type="text" name="userId" id="userId" value="${userId}">
+    </label>
+
+
+    <label for="password">Password
+        <input type="password" name="password" id="password">
+    </label>
+
+    <input class="pure-button pure-button-primary" type="submit" value="Login">
 </form>
-</body>
-</html>
+</@layout.mainLayout>

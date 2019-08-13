@@ -83,16 +83,42 @@ dependencies {
 //    //核心包
 //    compile 'org.apache.logging.log4j:log4j-core:2.12.0'
 
-    //DB
+    /**
+     * DB
+     */
     compile "mysql:mysql-connector-java:8.0.15"
-
+    //内存数据库
+    compile "com.h2database:h2:1.4.191"
+    //数据链接池辅助包
+    compile "com.mchange:c3p0:0.9.5.2"
+    //Exposed 是 Kotlin 实现的轻量级 ORM，也是 JetBrains 和 Kotlin 官方倾力推荐的 ORM。
+    //该 ORM 十分轻量级，只做了底层封装、Dao 基础和 Model 基础，中上层的封装完全没有，可嵌入 Spring。
+    //目前支持的数据库方言：PostgreSQL MySQL Oracle SQLite H2 SQL Server
+    compile("org.jetbrains.exposed:exposed:0.3.2") {
+        exclude(module: 'log4j')
+        exclude(module: 'slf4j-log4j12')
+        exclude(module: 'kotlin-stdlib')
+    }
+    //时间处理
+    compile "joda-time:joda-time:2.9.2"
+    //进程内缓存框架
+    compile "org.ehcache:ehcache:3.4.0"
+    //webSocket
+    compile "io.ktor:ktor-websockets:$ktor_version"
+    /**
+     * Http
+     */
+    implementation "io.ktor:ktor-server-cio:$ktor_version"
+    implementation "io.ktor:ktor-client-cio:$ktor_version"
+    implementation "io.ktor:ktor-client-jackson:$ktor_version"
     implementation "io.ktor:ktor-jackson:$ktor_version"
     implementation "io.ktor:ktor-auth:$ktor_version"
     implementation "io.ktor:ktor-auth-jwt:$ktor_version"
-    //webSocket
-    compile "io.ktor:ktor-websockets:$ktor_version"
+
 
     testCompile "io.ktor:ktor-server-tests:$ktor_version"
+    testCompile "io.ktor:ktor-server-test-host:$ktor_version"
+    testCompile "io.mockk:mockk:1.9.3"
 }
 
 kotlin.experimental.coroutines = 'enable'
@@ -104,5 +130,6 @@ shadowJar {
 }
 
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
-    kotlinOptions.freeCompilerArgs += ["-Xuse-experimental=kotlin.Experimental"]
+    kotlinOptions.freeCompilerArgs += ["-Xuse-experimental=kotlin.Experimental",
+                                       "-Xuse-experimental=kotlinx.coroutines.ObsoleteCoroutinesApi"]
 }
