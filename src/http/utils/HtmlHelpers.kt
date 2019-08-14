@@ -1,4 +1,4 @@
-package com.geely.gic.hmi.http
+package com.geely.gic.hmi.http.utils
 
 import io.ktor.http.ContentType
 import kotlinx.html.*

@@ -19,7 +19,7 @@ apply plugin: 'com.github.johnrengelman.shadow'
 apply plugin: 'application'
 
 group 'com.geely.gic.hmi'
-version '0.0.1'
+version '1.0.0'
 //指定主类 运行入口 io.ktor.server.netty.EngineMain
 mainClassName = "com.geely.gic.hmi.ApplicationKt"
 

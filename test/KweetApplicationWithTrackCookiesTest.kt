@@ -1,4 +1,3 @@
-import chat.module
 import com.geely.gic.hmi.data.dao.DAOFacade
 import com.geely.gic.hmi.data.model.User
 import com.geely.gic.hmi.module
@@ -41,7 +40,7 @@ class KweetApplicationWithTrackCookiesTest {
     }
 
     private fun testApp(callback: TestApplicationEngine.() -> Unit) {
-        withTestApplication({ module(dao = dao) }) { callback() }
+//        withTestApplication({ module() }) { callback() }
     }
 }
 

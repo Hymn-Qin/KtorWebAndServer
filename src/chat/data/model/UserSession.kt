@@ -1,4 +1,4 @@
-package chat.data
+package chat.data.model
 
 data class UserSession(val uuid: String,           // UUID
                        var nickname: String,       // 昵称

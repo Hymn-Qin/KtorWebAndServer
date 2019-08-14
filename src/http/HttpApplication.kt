@@ -2,12 +2,11 @@ package com.geely.gic.hmi.http
 
 import com.geely.gic.hmi.data.model.PostSnippet
 import com.geely.gic.hmi.data.model.Snippet
-import com.geely.gic.hmi.http.data.getPosts
-import com.geely.gic.hmi.http.data.getReplies
-import com.geely.gic.hmi.http.data.getUsers
 import com.geely.gic.hmi.http.security.authentication
+import com.geely.gic.hmi.http.utils.*
+import com.geely.gic.hmi.http.utils.respond
 import com.geely.gic.hmi.utils.gson
-import http.data.model.*
+import http.data.model.HttpBinError
 import io.ktor.application.Application
 import io.ktor.application.call
 import io.ktor.application.install
@@ -15,7 +14,6 @@ import io.ktor.auth.*
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.apache.Apache
 import io.ktor.client.features.json.JsonFeature
-import io.ktor.client.request.get
 import io.ktor.features.*
 import io.ktor.gson.GsonConverter
 import io.ktor.html.respondHtml
@@ -29,9 +27,7 @@ import io.ktor.request.receive
 import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.util.*
-import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.newSingleThreadContext
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.util.*
@@ -51,7 +47,7 @@ import java.util.concurrent.atomic.AtomicLong
 fun Application.httpModule(testing: Boolean = false) {
 
     //身份认证
-    val simpleJWT = authentication()
+//    val simpleJWT = authentication()
 
     val httpClient = HttpClient(Apache) {
         install(JsonFeature)
@@ -152,21 +148,6 @@ fun Application.httpModule(testing: Boolean = false) {
      * Http 后端服务
      */
     routing {
-        val myContext = newSingleThreadContext("MyOwnThread")
-        get("/") {
-            val deferred = async(myContext) {
-                try {
-                    val result = httpClient.get<String>("http://localhost:8081/")
-                    logger.info("success")
-                    result
-                } catch (e: Exception) {
-                    logger.info("failure")
-                    "-- nothing --"
-                }
-            }
-            call.respondText(deferred.await())
-        }
-
         //9，Http 内容协商
         val snippets = Collections.synchronizedList(
             mutableListOf(
@@ -174,38 +155,9 @@ fun Application.httpModule(testing: Boolean = false) {
                 Snippet(user = "test", text = "world")
             )
         )
-
-        /**
-         *
-         */
-//        get("/snippets") {
-//            //            call.respond(mapOf("OK" to true))
-//            //回复json字符串
-//            //
-//            call.respond(mapOf("snippets" to synchronized(snippets) {
-//                snippets.toList()
-//            }))
-//        }
-//        post("/snippets") {
-//            val post = call.receive<PostSnippet>()
-//            //接收数据{"snippet": {"text" : "mysnippet"}}
-//            snippets += Snippet(post.snippet.text)
-//            call.respond(mapOf("OK" to true))
-//        }
-
         //使用 route(path) { } 块将具有相同前缀的路由分组。
         // 对于每个 HTTP 方法，都有一个不带路由路径参数的重载，
         // 可以用于路由的叶子节点
-        /**
-         *
-         */
-
-//        location<Index> {
-//            get { }
-//            post {
-//
-//            }
-//        }
         route("/snippets") {
             get {
                 call.respond(mapOf("snippets" to synchronized(snippets) {
@@ -227,71 +179,6 @@ fun Application.httpModule(testing: Boolean = false) {
 
         }
 
-//        login(simpleJWT)
-//        register()
-
-
-        get("/atom/forum/posts") {
-            call.respond(getPosts(call.parameters))
-        }
-
-        get("/atom/user/users") {
-            call.respond(getUsers(call.parameters))
-        }
-
-        get("/atom/forum/replies") {
-            call.respond(getReplies(call.parameters))
-        }
-
-        get("/public/forum/posts") {
-            logger.info("GET: {}", "/public/forum/posts")
-            val posts = httpClient.get<List<Post>>("http://localhost:8087/atom/forum/posts")
-
-            val authorIds = posts.map { post -> post.authorId }.joinToString(separator = ",")
-
-            val users = httpClient.get<List<User>>("http://localhost:8087/atom/user/users?ids=$authorIds")
-                .map { user -> user.id to user }.toMap()
-
-            call.respond(posts.map { post ->
-                SimplePost(
-                    id = post.id,
-                    title = post.title,
-                    authorName = users[post.authorId]?.name ?: "无名氏"
-                )
-            })
-        }
-
-        get("/public/forum/posts/{id}") {
-            val postId = call.parameters["id"]
-
-            logger.info("GET: {}", "/public/forum/posts/$postId")
-
-            val deferredPost = async {
-                httpClient.get<List<Post>>("http://localhost:8087/atom/forum/posts?ids=$postId")[0]
-            }
-
-            val deferredReplies = async {
-                httpClient.get<List<Reply>>("http://localhost:8087/atom/forum/replies?post_id=$postId")
-            }
-
-            val post = deferredPost.await()
-            val deferredUser = async {
-                httpClient.get<List<User>>("http://localhost:8087/atom/user/users?ids=${post.authorId}")[0]
-            }
-
-            val user = deferredUser.await()
-            call.respond(
-                DetailedPost(
-                    id = post.id,
-                    author = SimpleUser(user.id, user.name),
-                    title = post.title,
-                    content = post.content,
-                    replies = deferredReplies.await()
-                )
-            )
-        }
-
-
         // Route to test plain 'get' requests.
         // ApplicationCall.sendHttpBinResponse is an extension method defined in this project that sends
         // information about the request as an object, that will be converted into JSON
@@ -300,6 +187,7 @@ fun Application.httpModule(testing: Boolean = false) {
             call.sendHttpBinResponse()
         }
 
+        // 动态注册路由
         // This is a sample of registering routes "dynamically".
         // We define a map with a pair 'path' to 'method' and then we register it.
         val postPutDelete = mapOf(
@@ -319,6 +207,7 @@ fun Application.httpModule(testing: Boolean = false) {
             }
         }
 
+        // 匹配格式
         // Defines an '/image' route that will serve different content, based on the 'Accept' header sent by the client.
         route("/image") {
             val imageConfigs = listOf(
@@ -329,11 +218,14 @@ fun Application.httpModule(testing: Boolean = false) {
                 ImageConfig("any", ContentType.Image.Any, "jackal.jpg")
             )
             for ((path, contentType, filename) in imageConfigs) {
+                // 当'Accept' header 匹配时返回路径中特定格式的文件
                 // Serves this specific file in the specific format in the route when the 'Accept' header makes it the best match.
+                // Chrome 收到wolf_1.webp  其他浏览器收到 jackal.jpg
                 // So for example a Chrome browser would receive a WEBP image, while another browser like Internet Explorer would receive a JPEG.
                 accept(contentType) {
                     resource("", "static/$filename")
                 }
+                // 除此之外还可以通过 /image/‘format’ 指定格式返回文件 如： /image/any
                 // As a fallback, we also serve the file independently on the Accept header, in the `/image/format` route.
                 resource(path, "static/$filename")
             }
@@ -455,28 +347,11 @@ fun Application.httpModule(testing: Boolean = false) {
             if (n == 0) {
                 call.sendHttpBinResponse()
             } else {
-                //重定向
+                //重定向 到另一个路径
                 call.respondRedirect("/redirect/${n - 1}")
             }
         }
 
-        // Generates a temporal redirection [HttpStatusCode.Found] to the url specified in the path.
-        get("/redirect-to/{url}") {
-            val url = call.parameters["url"]!!
-            call.respondRedirect(url)
-        }
-
-        // @TOOD: Generates a redirection relative to this path
-        get("/relative-redirect/{n}") {
-            val n = call.parameters["n"]!!.toInt()
-            TODO("302 Relative redirects n times.")
-        }
-
-        // @TOOD: Generates a redirection absolute to this path
-        get("/absolute-redirect/{n}") {
-            val n = call.parameters["n"]!!.toInt()
-            TODO("302 Absolute redirects n times.")
-        }
 
         // Returns the list of raw cookies sent by the client
         get("/cookies") {

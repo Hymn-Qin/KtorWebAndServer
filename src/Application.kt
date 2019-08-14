@@ -1,11 +1,11 @@
 package com.geely.gic.hmi
 
-import com.geely.gic.hmi.data.dao.DAOFacade
+import chat.chat
 import com.geely.gic.hmi.data.dao.initDao
-import com.geely.gic.hmi.http.httpModule
-import com.geely.gic.hmi.http.login
-import com.geely.gic.hmi.http.register
+import com.geely.gic.hmi.http.*
+import com.geely.gic.hmi.http.data.Database
 import com.geely.gic.hmi.http.security.authentication
+import com.geely.gic.hmi.http.upload
 import http.data.model.HttpBinError
 import io.ktor.application.Application
 import io.ktor.application.call
@@ -28,15 +28,18 @@ import io.ktor.routing.routing
 import io.ktor.util.KtorExperimentalAPI
 import io.ktor.util.error
 import io.ktor.util.getDigestFunction
+import io.ktor.util.hex
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.io.File
+import java.io.IOException
 import java.util.*
 import java.util.concurrent.atomic.AtomicLong
 
 @Location("/user")
-class Users{
+class Users {
     @Location("/login")
-    data class Login(val userId: String = "", val error: String = "")
+    data class Login(val userId: String = "", val password: String = "", val error: String = "")
 
     @Location("/register")
     data class Register(
@@ -47,11 +50,51 @@ class Users{
     )
 
     @Location("/{user}")
-    data class UserPage(val user: String)
+    data class UserInfo(val user: String, val error: String = "")
+
+    @Location("/update")
+    data class UserUpdate(
+        val userId: String = "",
+        val error: String = ""
+    )
 
     @Location("/logout")
     class Logout()
 }
+
+@Location("image")
+class Load {
+
+}
+
+@Location("/video")
+class Video{
+    /**
+     * Location for a specific video stream by [id].
+     */
+    @Location("/{id}")
+    data class VideoStream(val id: Long)
+
+    /**
+     * Location for a specific video page by [id].
+     */
+    @Location("/{authorId}/{id}")
+    data class VideoPage( val authorId: String, val id: Long)
+
+    /**
+     * Location for uploading videos.
+     */
+    @Location("/upload")
+    class Upload()
+
+    /**
+     * The index root page with a summary of the site.
+     */
+    @Location("")
+    class Index()
+}
+
+
 
 //main函数
 fun main(args: Array<String>): Unit =
@@ -64,17 +107,33 @@ val logger: Logger by lazy { LoggerFactory.getLogger("Http") }
 @KtorExperimentalLocationsAPI
 @Suppress("unused") // Referenced in application.conf
 @kotlin.jvm.JvmOverloads
-fun Application.module(testing: Boolean = false, dao: DAOFacade = initDao()) {
+fun Application.module(testing: Boolean = false) {
 
     logger.info("Http started")
 
-    //身份认证
-    val simpleJWT = authentication()
+    // Obtains the youkube config key from the application.conf file.
+    // Inside that key, we then read several configuration properties
+    // with the [session.cookie], the [key] or the [upload.dir]
+    val youkubeConfig = environment.config.config("youkube")
+    val sessionCookieConfig = youkubeConfig.config("session.cookie")
+    val key: String = sessionCookieConfig.property("key").getString()
+    val sessionkey = hex(key)
+
+
+    // We create the folder and a [Database] in that folder for the configuration [upload.dir].
+    val uploadDirPath: String = youkubeConfig.property("upload.dir").getString()
+    val uploadDir = File(uploadDirPath)
+    if (!uploadDir.mkdirs() && !uploadDir.exists()) {
+        throw IOException("Failed to create directory ${uploadDir.absolutePath}")
+    }
+    val database = Database(uploadDir)
+
+    //初始化内存数据库
+    val dao = initDao()
 
     val httpClient = HttpClient(Apache) {
         install(JsonFeature)
     }
-
 
     /**
      * Install all the features we are going to use.
@@ -102,7 +161,11 @@ fun Application.module(testing: Boolean = false, dao: DAOFacade = initDao()) {
     install(DefaultHeaders)
     // 自动压缩
     // This feature enables compression automatically when accepted by the client.
-    install(Compression)
+//    install(Compression)
+    install(Compression) {
+        default()
+        excludeContentType(ContentType.Video.Any)
+    }
     // 自动304相应
     // Automatic '304 Not Modified' Responses
     install(ConditionalHeaders)
@@ -126,6 +189,7 @@ fun Application.module(testing: Boolean = false, dao: DAOFacade = initDao()) {
     // For each GET header, adds an automatic HEAD handler (checks the headers of the requests
     // without actually getting the payload to be more efficient about resources)
     install(AutoHeadResponse)
+    // 允许回复任意对象  并转换为json
     // Based on the Accept header, allows to reply with arbitrary objects converting them into JSON
     // when the client accepts it.
     install(ContentNegotiation) {
@@ -165,10 +229,21 @@ fun Application.module(testing: Boolean = false, dao: DAOFacade = initDao()) {
         )
     )
 
+    //身份认证
+    val simpleJWT = authentication(hashedUserTable)
     routing {
-        login(simpleJWT, dao)
+        login(simpleJWT, dao, httpClient)
         register(dao)
+        userInfo(dao)
+        image()
+
+        upload(database, uploadDir)
+        videos(database)
+        styles()
     }
+
+    //webSocket
+    chat(testing)
 }
 
 

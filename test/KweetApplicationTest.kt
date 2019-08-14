@@ -1,4 +1,3 @@
-import chat.module
 import com.geely.gic.hmi.data.dao.DAOFacade
 import com.geely.gic.hmi.data.model.Kweet
 import com.geely.gic.hmi.data.model.User
@@ -120,6 +119,6 @@ class KweetApplicationTest {
      * Private method used to reduce boilerplate when testing the application.
      */
     private fun testApp(callback: TestApplicationEngine.() -> Unit) {
-        withTestApplication({ module(dao = dao) }) { callback() }
+//        withTestApplication({ module() }) { callback() }
     }
 }

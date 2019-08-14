@@ -63,6 +63,7 @@ interface DAOFacade : Closeable {
      */
     fun createUser(user: User)
 
+    fun updateUser(user: User)
     /**
      * Returns a list of Kweet ids, with the ones with most replies first.
      */
@@ -79,8 +80,13 @@ interface DAOFacade : Closeable {
  * Uses Exposed, and either an in-memory H2 database or a file-based H2 database by default.
  * But can be configured.
  */
-class DAOFacadeDatabase(val db: Database = Database.connect("jdbc:h2:mem:test", driver = "org.h2.Driver")): DAOFacade {
-    constructor(dir: File) : this(Database.connect("jdbc:h2:file:${dir.canonicalFile.absolutePath}", driver = "org.h2.Driver"))
+class DAOFacadeDatabase(val db: Database = Database.connect("jdbc:h2:mem:test", driver = "org.h2.Driver")) : DAOFacade {
+    constructor(dir: File) : this(
+        Database.connect(
+            "jdbc:h2:file:${dir.canonicalFile.absolutePath}",
+            driver = "org.h2.Driver"
+        )
+    )
 
     override fun init() {
         // Create the used tables
@@ -120,29 +126,39 @@ class DAOFacadeDatabase(val db: Database = Database.connect("jdbc:h2:mem:test", 
     }
 
     override fun userKweets(userId: String) = db.transaction {
-        Kweets.slice(Kweets.id).select { Kweets.user.eq(userId) }.orderBy(Kweets.date, false).limit(100).map { it[Kweets.id] }
+        Kweets.slice(Kweets.id).select { Kweets.user.eq(userId) }.orderBy(Kweets.date, false).limit(100)
+            .map { it[Kweets.id] }
     }
 
     override fun user(userId: String, hash: String?) = db.transaction {
         Users.select { Users.id.eq(userId) }
-                .mapNotNull {
-                    if (hash == null || it[Users.passwordHash] == hash) {
-                        User(userId, it[Users.email], it[Users.displayName], it[Users.passwordHash])
-                    } else {
-                        null
-                    }
+            .mapNotNull {
+                if (hash == null || it[Users.passwordHash] == hash) {
+                    User(userId, it[Users.email], it[Users.displayName], it[Users.passwordHash])
+                } else {
+                    null
                 }
-                .singleOrNull()
+            }
+            .singleOrNull()
     }
 
     override fun userByEmail(email: String) = db.transaction {
         Users.select { Users.email.eq(email) }
-                .map { User(it[Users.id], email, it[Users.displayName], it[Users.passwordHash]) }.singleOrNull()
+            .map { User(it[Users.id], email, it[Users.displayName], it[Users.passwordHash]) }.singleOrNull()
     }
 
     override fun createUser(user: User) = db.transaction {
         Users.insert {
             it[id] = user.userId
+            it[displayName] = user.displayName
+            it[email] = user.email
+            it[passwordHash] = user.passwordHash
+        }
+        Unit
+    }
+
+    override fun updateUser(user: User) = db.transaction {
+        Users.update({ Users.id.eq(user.userId) }) {
             it[displayName] = user.displayName
             it[email] = user.email
             it[passwordHash] = user.passwordHash
@@ -157,13 +173,13 @@ class DAOFacadeDatabase(val db: Database = Database.connect("jdbc:h2:mem:test", 
 
         val k2 = Kweets.alias("k2")
         Kweets.join(k2, JoinType.LEFT, Kweets.id, k2[Kweets.replyTo])
-                .slice(Kweets.id, k2[Kweets.id].count())
-                .selectAll()
-                .groupBy(Kweets.id)
-                .orderBy(k2[Kweets.id].count(), isAsc = false)
+            .slice(Kweets.id, k2[Kweets.id].count())
+            .selectAll()
+            .groupBy(Kweets.id)
+            .orderBy(k2[Kweets.id].count(), isAsc = false)
 //                .having { k2[Kweets.id].count().greater(0) }
-                .limit(count)
-                .map { it[Kweets.id] }
+            .limit(count)
+            .map { it[Kweets.id] }
     }
 
     override fun latest(count: Int): List<Int> = db.transaction {
@@ -176,10 +192,10 @@ class DAOFacadeDatabase(val db: Database = Database.connect("jdbc:h2:mem:test", 
             val dt = DateTime.now().minusMinutes(minutes)
 
             val all = Kweets.slice(Kweets.id)
-                    .select { Kweets.date.greater(dt) }
-                    .orderBy(Kweets.date, false)
-                    .limit(count)
-                    .map { it[Kweets.id] }
+                .select { Kweets.date.greater(dt) }
+                .orderBy(Kweets.date, false)
+                .limit(count)
+                .map { it[Kweets.id] }
 
             if (all.size >= count) {
                 return@transaction all

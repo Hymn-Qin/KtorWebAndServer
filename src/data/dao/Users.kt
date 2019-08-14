@@ -1,6 +1,6 @@
 package com.geely.gic.hmi.data.dao
 
-import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.*
 
 /**
  * Represents the Users table using Exposed as DAO.

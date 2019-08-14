@@ -1,11 +1,10 @@
-package com.geely.gic.hmi.http
+package com.geely.gic.hmi.http.utils
 
 import io.ktor.application.*
 import io.ktor.features.*
 import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.request.ApplicationRequest
-import io.ktor.response.*
 
 class HttpBinResponse(
     var parameters: Parameters? = null,

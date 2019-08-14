@@ -1,10 +1,7 @@
-package com.geely.gic.hmi.http
+package com.geely.gic.hmi.http.utils
 
 import com.geely.gic.hmi.utils.gson
-import com.google.gson.Gson
-import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
-import io.ktor.application.ApplicationCall
 import io.ktor.application.call
 import io.ktor.http.ContentType
 import io.ktor.http.HttpMethod
@@ -12,13 +9,8 @@ import io.ktor.http.Parameters
 import io.ktor.http.content.MultiPartData
 import io.ktor.http.content.PartData
 import io.ktor.http.content.readAllParts
-import io.ktor.locations.Location
-import io.ktor.locations.locations
-import io.ktor.request.host
-import io.ktor.request.port
 import io.ktor.request.receive
 import io.ktor.response.respond
-import io.ktor.response.respondRedirect
 import io.ktor.routing.Route
 import io.ktor.routing.contentType
 import io.ktor.routing.method
@@ -85,18 +77,3 @@ fun Route.handleRequestWithBodyFor(method: HttpMethod): Unit {
 }
 
 
-/**
- * http 重定向
- *
- * Allows to respond with a absolute redirect from a typed [location] instance of a class annotated
- * with [Location] using the Locations feature.
- */
-suspend fun ApplicationCall.redirect(location: Any) {
-//    val host = request.host() ?: "localhost"
-//    val portSpec = request.port().let { if (it == 80) "" else ":$it" }
-//    val address = host + portSpec
-
-//    respondRedirect("http://$address${application.locations.href(location)}")
-    val result = mapOf("msg" to application.locations.href(location))
-    respond(result)
-}

@@ -50,6 +50,7 @@ import kotlinx.html.ul
 import web.*
 import org.slf4j.LoggerFactory
 import java.io.File
+import web.styles as styles
 
 @KtorExperimentalLocationsAPI
 @KtorExperimentalAPI

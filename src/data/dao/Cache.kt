@@ -121,6 +121,15 @@ class DAOFacadeCache(private val delegate: DAOFacade, private val storagePath: F
         usersCache.put(user.userId, user)
     }
 
+    override fun updateUser(user: User) {
+        val cached = usersCache.get(user.userId)
+
+        if (cached != null) {
+            delegate.updateUser(user)
+            usersCache.put(user.userId, user)
+        }
+    }
+
     override fun top(count: Int): List<Int> {
         return delegate.top(count)
     }
@@ -130,10 +139,8 @@ class DAOFacadeCache(private val delegate: DAOFacade, private val storagePath: F
     }
 
     override fun close() {
-        try {
+        cacheManager.use {
             delegate.close()
-        } finally {
-            cacheManager.close()
         }
     }
 }
