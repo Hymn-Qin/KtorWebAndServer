@@ -1,0 +1,4 @@
+#Key and value types
+#Sun Aug 18 10:24:01 CST 2019
+keyType=java.lang.Integer
+valueType=com.geely.gic.hmi.data.model.Kweet

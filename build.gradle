@@ -1,0 +1,134 @@
+buildscript {
+    repositories {
+        jcenter()
+        //shadow
+        maven { url "https://plugins.gradle.org/m2/" }
+    }
+
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        //shadow 插件 打包所有输出类、资源、依赖项到一个JAR文件中并生成清单文件
+        //发布到Docker
+        classpath 'com.github.jengelman.gradle.plugins:shadow:5.0.0'
+    }
+}
+apply plugin: 'java'
+apply plugin: 'kotlin'
+//shadow 插件
+apply plugin: 'com.github.johnrengelman.shadow'
+apply plugin: 'application'
+
+group 'com.geely.gic.hmi'
+version '0.0.1'
+mainClassName = "com.geely.gic.hmi.ApplicationKt"
+
+sourceSets {
+    main.kotlin.srcDirs = main.java.srcDirs = ['src']
+    test.kotlin.srcDirs = test.java.srcDirs = ['test']
+    main.resources.srcDirs = ['resources']
+    test.resources.srcDirs = ['testresources']
+}
+
+repositories {
+    mavenLocal()
+    jcenter()
+    maven { url 'https://kotlin.bintray.com/ktor' }
+    maven { url 'https://kotlin.bintray.com/kotlin-js-wrappers' }
+}
+
+sourceCompatibility = 1.8
+compileKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}
+compileTestKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}
+dependencies {
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+    //netty
+    compile "io.ktor:ktor-server-netty:$ktor_version"
+    compile "io.ktor:ktor-server-core:$ktor_version"
+
+    //html-dsl
+    compile "io.ktor:ktor-html-builder:$ktor_version"
+    compile "org.jetbrains:kotlin-css-jvm:1.0.0-pre.31-kotlin-1.2.41"
+
+    compile "io.ktor:ktor-client-core:$ktor_version"
+    compile "io.ktor:ktor-client-core-jvm:$ktor_version"
+    compile "io.ktor:ktor-client-apache:$ktor_version"
+    //gson
+    compile "io.ktor:ktor-gson:$ktor_version"
+    //模板freemarker
+    compile "io.ktor:ktor-freemarker:$ktor_version"
+    //session
+    compile "io.ktor:ktor-server-sessions:$ktor_version"
+    //locations 路由
+    compile "io.ktor:ktor-locations:$ktor_version"
+
+    //log slf4j 接口包
+    implementation 'org.slf4j:slf4j-api:1.7.26'
+
+    //logback
+    compile "ch.qos.logback:logback-core:$logback_version"
+    compile "ch.qos.logback:logback-classic:$logback_version"
+    compile "ch.qos.logback:logback-access:$logback_version"
+    //log4j
+    // <!--用于解决web环境下关闭服务器时可能出现的log4j线程无法及时关闭的warn，web工程需要包含log4j-web，非web工程不需要 -->
+//    compile 'org.apache.logging.log4j:log4j-web:2.12.0'
+//    //桥接包
+//    compile 'org.apache.logging.log4j:log4j-slf4j-impl:2.12.0'
+//    //接口包
+//    compile 'org.apache.logging.log4j:log4j-api:2.12.0'
+//    //核心包
+//    compile 'org.apache.logging.log4j:log4j-core:2.12.0'
+
+    /**
+     * DB
+     */
+    compile "mysql:mysql-connector-java:8.0.15"
+    //内存数据库
+    compile "com.h2database:h2:1.4.191"
+    //数据链接池辅助包
+    compile "com.mchange:c3p0:0.9.5.2"
+    //Exposed 是 Kotlin 实现的轻量级 ORM，也是 JetBrains 和 Kotlin 官方倾力推荐的 ORM。
+    //该 ORM 十分轻量级，只做了底层封装、Dao 基础和 Model 基础，中上层的封装完全没有，可嵌入 Spring。
+    //目前支持的数据库方言：PostgreSQL MySQL Oracle SQLite H2 SQL Server
+    compile("org.jetbrains.exposed:exposed:0.3.2") {
+        exclude(module: 'log4j')
+        exclude(module: 'slf4j-log4j12')
+        exclude(module: 'kotlin-stdlib')
+    }
+    //时间处理
+    compile "joda-time:joda-time:2.9.2"
+    //进程内缓存框架
+    compile "org.ehcache:ehcache:3.4.0"
+    //webSocket
+    compile "io.ktor:ktor-websockets:$ktor_version"
+    /**
+     * Http
+     */
+    implementation "io.ktor:ktor-server-cio:$ktor_version"
+    implementation "io.ktor:ktor-client-cio:$ktor_version"
+    implementation "io.ktor:ktor-client-jackson:$ktor_version"
+    implementation "io.ktor:ktor-jackson:$ktor_version"
+    implementation "io.ktor:ktor-auth:$ktor_version"
+    implementation "io.ktor:ktor-auth-jwt:$ktor_version"
+
+
+    testCompile "io.ktor:ktor-server-tests:$ktor_version"
+    testCompile "io.ktor:ktor-server-test-host:$ktor_version"
+    testCompile "io.mockk:mockk:1.9.3"
+}
+
+kotlin.experimental.coroutines = 'enable'
+
+shadowJar {
+    baseName = 'my-application'
+    classifier = null
+    version = null
+}
+
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
+    kotlinOptions.freeCompilerArgs += ["-Xuse-experimental=kotlin.Experimental",
+                                       "-Xuse-experimental=kotlinx.coroutines.ObsoleteCoroutinesApi"]
+}
