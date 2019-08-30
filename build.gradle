@@ -4,23 +4,38 @@ buildscript {
         //shadow
         maven { url "https://plugins.gradle.org/m2/" }
     }
-
+    ext.tomcat_plugin_version = '2.4.2'
+    ext.tomcat_version = '9.0.4'
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         //shadow 插件 打包所有输出类、资源、依赖项到一个JAR文件中并生成清单文件
         //发布到Docker
         classpath 'com.github.jengelman.gradle.plugins:shadow:5.0.0'
+        //tomcat
+//        classpath "com.bmuschko:gradle-tomcat-plugin:$tomcat_plugin_version"
     }
 }
 apply plugin: 'java'
 apply plugin: 'kotlin'
-//shadow 插件
+//docker shadow 插件
 apply plugin: 'com.github.johnrengelman.shadow'
 apply plugin: 'application'
+
+//tomcat
+//apply plugin: 'war'
+//apply plugin: 'com.bmuschko.tomcat'
 
 group 'com.geely.gic.hmi'
 version '0.0.1'
 mainClassName = "com.geely.gic.hmi.ApplicationKt"
+
+//tomcat
+//webAppDirName = 'webapp'
+//tomcat {
+//    contextPath = '/'
+//    httpProtocol = 'org.apache.coyote.http11.Http11Nio2Protocol'
+//    ajpProtocol  = 'org.apache.coyote.ajp.AjpNio2Protocol'
+//}
 
 sourceSets {
     main.kotlin.srcDirs = main.java.srcDirs = ['src']
@@ -114,6 +129,9 @@ dependencies {
     implementation "io.ktor:ktor-auth:$ktor_version"
     implementation "io.ktor:ktor-auth-jwt:$ktor_version"
 
+    //tomcat
+    //tomcat "org.apache.tomcat.embed:tomcat-embed-core:$tomcat_version",
+    //            "org.apache.tomcat.embed:tomcat-embed-jasper:$tomcat_version"
 
     testCompile "io.ktor:ktor-server-tests:$ktor_version"
     testCompile "io.ktor:ktor-server-test-host:$ktor_version"
@@ -122,13 +140,18 @@ dependencies {
 
 kotlin.experimental.coroutines = 'enable'
 
+//docker
 shadowJar {
     baseName = 'my-application'
     classifier = null
     version = null
 }
+//tomcat
+//task run(dependsOn: tomcatRun)
 
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
     kotlinOptions.freeCompilerArgs += ["-Xuse-experimental=kotlin.Experimental",
                                        "-Xuse-experimental=kotlinx.coroutines.ObsoleteCoroutinesApi"]
 }
+
+

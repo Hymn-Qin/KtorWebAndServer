@@ -3,13 +3,15 @@ package com.geely.gic.hmi.http
 import com.geely.gic.hmi.Users
 import com.geely.gic.hmi.data.dao.DAOFacade
 import com.geely.gic.hmi.data.model.User
-import com.geely.gic.hmi.http.utils.logger
-import com.geely.gic.hmi.http.utils.redirect
-import com.geely.gic.hmi.http.utils.request
-import com.geely.gic.hmi.http.utils.respond
 import com.geely.gic.hmi.security.hashFunction
+import com.geely.gic.hmi.security.isUserEmailValid
 import com.geely.gic.hmi.security.userNameValid
-import io.ktor.application.*
+import com.geely.gic.hmi.utils.redirect
+import com.geely.gic.hmi.utils.request
+import com.geely.gic.hmi.utils.respond
+import io.ktor.application.application
+import io.ktor.application.call
+import io.ktor.application.log
 import io.ktor.http.Parameters
 import io.ktor.locations.post
 import io.ktor.request.receive
@@ -17,7 +19,6 @@ import io.ktor.routing.Route
 
 fun Route.register(dao: DAOFacade) {
     post<Users.Register> {
-        logger.info("POST: {}", call.request(it))
 
         val post = call.receive<Parameters>()
 
@@ -31,6 +32,7 @@ fun Route.register(dao: DAOFacade) {
         when {
             password.length < 6 -> return@post call.redirect(error.copy(error = "Password should be at least 6 characters long"))
             userId.length < 4 -> return@post call.redirect(error.copy(error = "Login should be at least 4 characters long"))
+            !isUserEmailValid(email) -> call.redirect(error.copy(error = "Invalid email"))
             !userNameValid(userId) -> return@post call.redirect(error.copy(error = "Login should be consists of digits, letters, dots or underscores"))
             dao.user(userId) != null -> return@post call.redirect(error.copy(error = "User with the following login is already registered"))
             dao.userByEmail(email) != null -> return@post call.redirect(error.copy(error = "User with the following email $email is already registered"))

@@ -1,6 +1,7 @@
 package com.geely.gic.hmi.security
 
 import io.ktor.util.hex
+import utils.Patterns
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
@@ -37,3 +38,11 @@ private val userIdPattern = "[a-zA-Z0-9_\\.]+".toRegex()
  * Or other things like a bad word filter.
  */
 internal fun userNameValid(userId: String) = userId.matches(userIdPattern)
+
+internal fun isUserEmailValid(email: String?): Boolean {
+    return when {
+        email.isNullOrEmpty() -> false
+        email.contains('@') -> Patterns.EMAIL_ADDRESS.matcher(email).matches()
+        else -> email.isNotBlank()
+    }
+}

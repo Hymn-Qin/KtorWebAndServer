@@ -1,6 +1,6 @@
 package com.geely.gic.hmi.http
 
-import com.geely.gic.hmi.http.utils.ImageConfig
+import com.geely.gic.hmi.utils.ImageConfig
 import io.ktor.http.ContentType
 import io.ktor.http.content.resource
 import io.ktor.routing.Route

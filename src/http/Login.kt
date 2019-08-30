@@ -5,11 +5,14 @@ import com.geely.gic.hmi.data.dao.DAOFacade
 import com.geely.gic.hmi.data.model.InvalidAccountException
 import com.geely.gic.hmi.data.model.Reply
 import com.geely.gic.hmi.data.model.User
-import com.geely.gic.hmi.http.utils.*
 import com.geely.gic.hmi.security.SimpleJWT
 import com.geely.gic.hmi.security.hashFunction
 import com.geely.gic.hmi.security.userNameValid
+import com.geely.gic.hmi.utils.redirect
+import com.geely.gic.hmi.utils.respond
+import io.ktor.application.application
 import io.ktor.application.call
+import io.ktor.application.log
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.http.Parameters
@@ -20,13 +23,12 @@ import kotlinx.coroutines.async
 
 fun Route.login(simpleJwt: SimpleJWT, dao: DAOFacade, httpClient: HttpClient) {
 
-    post<Users.Login> {
-        logger.info("POST: {}", call.request(it))
+    get<Users.Login> {
+        application.log.info("Login GET data:{}", it)
 
-        val post = call.receive<Parameters>()
+        val userId = call.parameters["userId"]?: throw InvalidAccountException("Invalid username")
+        val password = call.parameters["password"]?: throw InvalidAccountException("Invalid password")
 
-        val userId = post["userId"] ?: throw InvalidAccountException("Invalid username")
-        val password = post["password"] ?: throw InvalidAccountException("Invalid password")
         val error = Users.Login(userId)
         val login = when {
             userId.length < 4 -> null
@@ -35,7 +37,6 @@ fun Route.login(simpleJwt: SimpleJWT, dao: DAOFacade, httpClient: HttpClient) {
             //查询数据库
             else -> dao.user(userId, hashFunction(password))
         }
-
         if (login == null) {
             call.redirect(error.copy(error = "Invalid username or password"))
         } else {
@@ -43,7 +44,7 @@ fun Route.login(simpleJwt: SimpleJWT, dao: DAOFacade, httpClient: HttpClient) {
             val token = simpleJwt.sign(login.userId)
             //返回json数据
             val userInfo = async {
-                httpClient.get<Reply<User>>(call.address(Users.UserInfo(login.userId))).result
+                httpClient.get<Reply<User>>(call.url(Users.UserInfo(login.userId))).result
             }
             call.respond(userInfo.await())
         }
@@ -51,7 +52,7 @@ fun Route.login(simpleJwt: SimpleJWT, dao: DAOFacade, httpClient: HttpClient) {
 
     get<Users.Logout> {
         val post = call.receive<Parameters>()
-        logger.info("LOGIN_OUT GET: {}", post)
+        application.log.info("LOGIN_OUT GET: {}", post)
         val userId = post["userId"] ?: return@get call.redirect(it)
 
     }

@@ -1,9 +1,9 @@
-package com.geely.gic.hmi.http.utils
+package com.geely.gic.hmi.utils
 
 import com.geely.gic.hmi.Users
 import com.geely.gic.hmi.data.model.Reply
 import io.ktor.application.ApplicationCall
-import io.ktor.features.callId
+import io.ktor.application.log
 import io.ktor.locations.Location
 import io.ktor.locations.locations
 import io.ktor.locations.url
@@ -21,12 +21,12 @@ import io.ktor.response.respondRedirect
  */
 suspend fun ApplicationCall.redirect(message: Any) {
     val reply = when (message) {
-        is Users.Login -> Reply(201, message.error, null)
-        is Users.Register -> Reply(202, message.error, null)
-        is Users.UserInfo -> Reply(203, message.error, null)
-        else -> Reply(200, "other", null)
+        is Users.Login -> Reply(301, message.error ?: "", null)
+        is Users.Register -> Reply(302, message.error ?: "", null)
+        is Users.UserInfo -> Reply(303, message.error ?: "", null)
+        else -> Reply(300, "other", null)
     }
-    logger.info("REPLY: {}", reply)
+    application.log.info("REPLY: {}", reply)
     respond(reply)
 }
 
@@ -34,8 +34,8 @@ suspend fun ApplicationCall.redirect(message: Any) {
  * 返回成功的响应
  */
 suspend fun ApplicationCall.respond(result: Any?) {
-    val reply = Reply(100, "success", result)
-    logger.info("REPLY: {}", reply)
+    val reply = Reply(200, "success", result)
+    application.log.info("REPLY: {}", reply)
     respond(reply)
 }
 
@@ -54,8 +54,9 @@ suspend fun ApplicationCall.address(location: Any): String {
  */
 suspend fun ApplicationCall.request(location: Any): String {
     val request = application.locations.href(location)
-    val index = request.indexOf('?')
-    return request.substring(0, if (index != 0) index else request.length - 1)
+//    val index = request.indexOf('?')
+//    return request.substring(0, if (index != 0) index else request.length - 1)
+    return request
 }
 
 /**

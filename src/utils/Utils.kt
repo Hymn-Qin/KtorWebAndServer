@@ -1,6 +1,5 @@
-package com.geely.gic.hmi.http.utils
+package com.geely.gic.hmi.utils
 
-import com.geely.gic.hmi.utils.gson
 import com.google.gson.reflect.TypeToken
 import io.ktor.application.call
 import io.ktor.http.ContentType
@@ -15,10 +14,6 @@ import io.ktor.routing.Route
 import io.ktor.routing.contentType
 import io.ktor.routing.method
 import io.ktor.util.toMap
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
-
-val logger: Logger by lazy { LoggerFactory.getLogger("Http") }
 
 /**
  * This this [Route] node, registers [method] route that will change depending on the [ContentType] provided by the client

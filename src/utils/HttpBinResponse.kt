@@ -1,4 +1,4 @@
-package com.geely.gic.hmi.http.utils
+package com.geely.gic.hmi.utils
 
 import io.ktor.application.*
 import io.ktor.features.*

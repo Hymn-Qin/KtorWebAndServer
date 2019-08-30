@@ -1,15 +1,12 @@
 package com.geely.gic.hmi
 
 import chat.chat
-import com.fasterxml.jackson.databind.SerializationFeature
 import com.geely.gic.hmi.data.dao.userDao
-import com.geely.gic.hmi.http.*
 import com.geely.gic.hmi.data.dao.videoDao
-import com.geely.gic.hmi.data.model.HttpBinError
-import com.geely.gic.hmi.data.model.InvalidCredentialsException
 import com.geely.gic.hmi.data.model.Reply
+import com.geely.gic.hmi.http.*
 import com.geely.gic.hmi.security.authentication
-import com.geely.gic.hmi.http.upload
+import com.geely.gic.hmi.utils.gson
 import io.ktor.application.Application
 import io.ktor.application.call
 import io.ktor.application.install
@@ -23,7 +20,6 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
-import io.ktor.jackson.jackson
 import io.ktor.locations.KtorExperimentalLocationsAPI
 import io.ktor.locations.Location
 import io.ktor.locations.Locations
@@ -33,83 +29,20 @@ import io.ktor.util.KtorExperimentalAPI
 import io.ktor.util.error
 import io.ktor.util.getDigestFunction
 import io.ktor.util.hex
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.util.*
 import java.util.concurrent.atomic.AtomicLong
-
-@Location("/user")
-class Users {
-    @Location("/login")
-    data class Login(val userId: String = "", val password: String = "", val error: String = "")
-
-    @Location("/register")
-    data class Register(
-        val userId: String = "",
-        val displayName: String = "",
-        val email: String = "",
-        val error: String = ""
-    )
-
-    @Location("/{user}")
-    data class UserInfo(val user: String, val error: String = "")
-
-    @Location("/update")
-    data class UserUpdate(
-        val userId: String = "",
-        val error: String = ""
-    )
-
-    @Location("/logout")
-    class Logout()
-}
-
-@Location("image")
-class Load {
-
-}
-
-@Location("/video")
-class Video {
-    /**
-     * Location for a specific video stream by [id].
-     */
-    @Location("/{id}")
-    data class VideoStream(val id: Long)
-
-    /**
-     * Location for a specific video page by [id].
-     */
-    @Location("/{authorId}/{id}")
-    data class VideoPage(val authorId: String, val id: Long)
-
-    /**
-     * Location for uploading videos.
-     */
-    @Location("/upload")
-    class Upload()
-
-    /**
-     * The index root page with a summary of the site.
-     */
-    @Location("")
-    class Index()
-}
 
 //main函数
 fun main(args: Array<String>): Unit =
     //创建一个内嵌Netty的服务器
     io.ktor.server.netty.EngineMain.main(args)
 
-val logger: Logger by lazy { LoggerFactory.getLogger("Http") }
-
 @KtorExperimentalAPI
 @KtorExperimentalLocationsAPI
 @Suppress("unused") // Referenced in application.conf
 @kotlin.jvm.JvmOverloads
 fun Application.module(testing: Boolean = false) {
-
-    logger.info("Http started")
+    environment.log.info("Http started")
 
     // Obtains the app config key from the application.conf file.
     // Inside that key, we then read several configuration properties
@@ -205,7 +138,7 @@ fun Application.module(testing: Boolean = false) {
     // 处理没有的请求
     // Here we handle unhandled exceptions from routes
     install(StatusPages) {
-//        exception<Throwable> { cause ->
+//                exception<Throwable> { cause ->
 //            environment.log.error(cause)
 //            val error = HttpBinError(
 //                code = HttpStatusCode.InternalServerError,
@@ -217,7 +150,7 @@ fun Application.module(testing: Boolean = false) {
 //        }
 
         //捕获无效的凭据异常
-        exception<InvalidCredentialsException> { exception ->
+        exception<Exception> { exception ->
             environment.log.error(exception)
             val error = HttpStatusCode.Unauthorized
             val reply = Reply(
@@ -256,5 +189,61 @@ fun Application.module(testing: Boolean = false) {
     chat(testing)
 }
 
+@Location("/user")
+class Users {
+    @Location("/")//get
+    data class Login(
+        val userId: String = "",
+        val password: String = "",
+        val error: String? = null
+    )
 
+    @Location("/register")//post
+    data class Register(
+        val userId: String = "",
+        val displayName: String = "",
+        val email: String = "",
+        val error: String? = null
+    )
+
+    @Location("/{userId}")//get //put
+    data class UserInfo(
+        val userId: String,
+        val error: String? = null)
+
+    @Location("/logout")//get
+    class Logout()
+}
+
+@Location("image")
+class Load {
+
+}
+
+@Location("/video")
+class Video {
+    /**
+     * Location for a specific video stream by [id].
+     */
+    @Location("/{id}")
+    data class VideoStream(val id: Long)
+
+    /**
+     * Location for a specific video page by [id].
+     */
+    @Location("/{authorId}/{id}")
+    data class VideoPage(val authorId: String, val id: Long)
+
+    /**
+     * Location for uploading videos.
+     */
+    @Location("/upload")
+    class Upload()
+
+    /**
+     * The index root page with a summary of the site.
+     */
+    @Location("")
+    class Index()
+}
 

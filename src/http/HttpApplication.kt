@@ -3,9 +3,8 @@ package com.geely.gic.hmi.http
 import com.geely.gic.hmi.data.model.HttpBinError
 import com.geely.gic.hmi.data.model.PostSnippet
 import com.geely.gic.hmi.data.model.Snippet
-import com.geely.gic.hmi.http.utils.*
-import com.geely.gic.hmi.http.utils.respond
-import com.geely.gic.hmi.utils.gson
+import com.geely.gic.hmi.utils.*
+import com.geely.gic.hmi.utils.respond
 import io.ktor.application.Application
 import io.ktor.application.call
 import io.ktor.application.install

@@ -2,7 +2,7 @@ package com.geely.gic.hmi.http
 
 import com.geely.gic.hmi.Video
 import com.geely.gic.hmi.data.dao.DAOVideoCache
-import com.geely.gic.hmi.http.utils.respondRedirect
+import com.geely.gic.hmi.utils.respondRedirect
 import com.geely.gic.hmi.utils.copyToSuspend
 import io.ktor.application.call
 import io.ktor.http.content.PartData

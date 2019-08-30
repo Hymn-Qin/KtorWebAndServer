@@ -14,7 +14,10 @@ fun Application.userDao(path: String): DAOFacade {
     /**
      * File where the database is going to be stored.
      */
-    val dir = File("path")
+    val dir = File(path)
+    if (!dir.mkdirs() && !dir.exists()) {
+        throw IOException("Failed to create directory ${dir.absolutePath}")
+    }
 
     /**
      * Pool of JDBC connections used.

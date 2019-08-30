@@ -4,10 +4,9 @@ import com.geely.gic.hmi.Users
 import com.geely.gic.hmi.data.dao.DAOFacade
 import com.geely.gic.hmi.data.model.User
 import com.geely.gic.hmi.security.hashFunction
-import com.geely.gic.hmi.http.utils.logger
-import com.geely.gic.hmi.http.utils.redirect
-import com.geely.gic.hmi.http.utils.request
-import com.geely.gic.hmi.http.utils.respond
+import com.geely.gic.hmi.utils.redirect
+import com.geely.gic.hmi.utils.request
+import com.geely.gic.hmi.utils.respond
 import io.ktor.application.application
 import io.ktor.application.call
 import io.ktor.application.log
@@ -24,19 +23,19 @@ fun Route.userInfo(dao: DAOFacade) {
     }
 
     get<Users.UserInfo> {
-        logger.info("GET: {}", call.request(it))
+        application.log.info("GET: {}", call.request(it))
 
-        val user = it.user
+        val user = it.userId
         val userInfo = dao.user(user)
         if (userInfo == null) {
             val error = Users.UserInfo(user)
-            call.redirect(error.copy(error = "User ${it.user} doesn't exist"))
+            call.redirect(error.copy(error = "User ${it.userId} doesn't exist"))
         } else {
             call.respond(userInfo)
         }
     }
 
-    post<Users.UserUpdate> {
+    post<Users.UserInfo> {
         val post = call.receive<Parameters>()
 
         val userId = post["userId"] ?: return@post call.redirect(it.copy(error = "Invalid userId"))
@@ -45,7 +44,7 @@ fun Route.userInfo(dao: DAOFacade) {
         val email = post["email"]
         val displayName = post["displayName"]
 
-        val error = Users.UserUpdate(userId = userId)
+        val error = Users.UserInfo(userId = userId)
 
         when {
             newPassword != null && newPassword.length < 6 -> return@post call.redirect(error.copy(error = "NewPassword should be at least 6 characters long"))
