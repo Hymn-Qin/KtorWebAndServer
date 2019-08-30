@@ -5,3 +5,8 @@
 *.iml
 *.ipr
 *.iws
+.classpath
+.project
+/bin
+.vscode
+

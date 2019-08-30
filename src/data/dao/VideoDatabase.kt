@@ -1,5 +1,6 @@
-package com.geely.gic.hmi.http.data
+package com.geely.gic.hmi.data.dao
 
+import com.geely.gic.hmi.data.model.Video
 import com.google.gson.GsonBuilder
 import com.google.gson.LongSerializationPolicy
 import org.ehcache.config.builders.CacheConfigurationBuilder
@@ -13,10 +14,10 @@ import java.util.*
 import java.util.concurrent.atomic.AtomicLong
 
 /**
- * Class that represents [Database] of the application.
+ * Class that represents [VideoDatabase] of the application.
  * It uses a folder instead of a real database to store videos an indexes,
  */
-class Database(val uploadDir: File) {
+class VideoDatabase(val uploadDir: File) {
     /**
      * A [GsonBuilder] used for storing the video information in a `.idx` file.
      */

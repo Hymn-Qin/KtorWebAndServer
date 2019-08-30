@@ -1,9 +1,9 @@
-package com.geely.gic.hmi.http
+package com.geely.gic.hmi.web
 
 import com.geely.gic.hmi.Video
-import com.geely.gic.hmi.http.data.Database
-import com.geely.gic.hmi.http.utils.respondDefaultHtml
-import com.geely.gic.hmi.http.utils.respondRedirect
+import com.geely.gic.hmi.data.dao.VideoDatabase
+import com.geely.gic.hmi.utils.respondDefaultHtml
+import com.geely.gic.hmi.utils.respondRedirect
 import com.geely.gic.hmi.utils.copyToSuspend
 import io.ktor.application.call
 import io.ktor.http.CacheControl
@@ -21,7 +21,7 @@ import java.io.File
 /**
  * Register [Upload] routes.
  */
-fun Route.upload(database: Database, uploadDir: File) {
+fun Route.upload(videoDatabase: VideoDatabase, uploadDir: File) {
     get<Video.Upload> {
 //        val session = call.sessions.get<YouKubeSession>()
 //        if (session == null) {
@@ -56,7 +56,7 @@ fun Route.upload(database: Database, uploadDir: File) {
 
     /**
      * Registers a POST route for [Upload] that actually read the bits sent from the client and creates a new video
-     * using the [database] and the [uploadDir].
+     * using the [videoDatabase] and the [uploadDir].
      */
     post<Video.Upload> {
 
@@ -92,7 +92,7 @@ fun Route.upload(database: Database, uploadDir: File) {
             }
             part.dispose()
         }
-        val id = database.addVideo(title, userId, videoFile!!)
+        val id = videoDatabase.addVideo(title, userId, videoFile!!)
         call.respondRedirect(Video.VideoPage(userId, id))
 
 //        }

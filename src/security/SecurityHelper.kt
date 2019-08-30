@@ -6,6 +6,7 @@ import io.ktor.http.HttpHeaders
 import io.ktor.request.header
 import io.ktor.request.host
 import io.ktor.util.hex
+import utils.Patterns
 import java.net.URI
 import java.util.concurrent.TimeUnit
 import javax.crypto.Mac
@@ -65,3 +66,11 @@ private val userIdPattern = "[a-zA-Z0-9_\\.]+".toRegex()
  * Or other things like a bad word filter.
  */
 internal fun userNameValid(userId: String) = userId.matches(userIdPattern)
+
+internal fun isUserEmailValid(email: String?): Boolean {
+    return when {
+        email.isNullOrEmpty() -> false
+        email.contains('@') -> Patterns.EMAIL_ADDRESS.matcher(email).matches()
+        else -> email.isNotBlank()
+    }
+}

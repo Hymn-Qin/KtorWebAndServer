@@ -1,4 +1,4 @@
-package com.geely.gic.hmi.http.data
+package com.geely.gic.hmi.data.model
 
 import java.io.*
 

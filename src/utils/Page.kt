@@ -1,8 +1,9 @@
-package com.geely.gic.hmi.http.utils
+package com.geely.gic.hmi.utils
 
+import com.geely.gic.hmi.Index
 import com.geely.gic.hmi.Users
 import com.geely.gic.hmi.Video
-import com.geely.gic.hmi.http.data.YouKubeSession
+import com.geely.gic.hmi.data.model.Session
 import io.ktor.application.ApplicationCall
 import io.ktor.features.origin
 import io.ktor.html.HtmlContent
@@ -16,7 +17,11 @@ import io.ktor.http.content.versions
 import io.ktor.locations.locations
 import io.ktor.locations.url
 import io.ktor.response.respond
+import io.ktor.sessions.get
+import io.ktor.sessions.sessions
 import io.ktor.util.date.GMTDate
+import kotlinx.css.*
+import kotlinx.css.properties.*
 import kotlinx.html.*
 import web.MainCss
 
@@ -24,9 +29,14 @@ import web.MainCss
  * Function that generates HTML for the structure of the page and allows to provide a [block] that will be placed
  * in the content place of the page.
  */
-suspend fun ApplicationCall.respondDefaultHtml(versions: List<Version>, visibility: CacheControl.Visibility, title: String = "You Kube", block: DIV.() -> Unit) {
+suspend fun ApplicationCall.respondDefaultHtml(
+    versions: List<Version>,
+    visibility: CacheControl.Visibility,
+    title: String = "Blog",
+    block: DIV.() -> Unit
+) {
     val content = HtmlContent(HttpStatusCode.OK) {
-        val session = YouKubeSession("123")//sessions.get<YouKubeSession>()
+        val session = sessions.get<Session>()
         head {
             title { +title }
             styleLink("http://yui.yahooapis.com/pure/0.6.0/pure-min.css")
@@ -37,6 +47,11 @@ suspend fun ApplicationCall.respondDefaultHtml(versions: List<Version>, visibili
             })
         }
         body {
+            //在当前页面写自定义样式
+            styleCss {
+                rule("demo") {
+                }
+            }
             div("pure-g") {
                 div("sidebar pure-u-1 pure-u-md-1-4") {
                     div("header") {
@@ -57,7 +72,7 @@ suspend fun ApplicationCall.respondDefaultHtml(versions: List<Version>, visibili
                                     }
                                 }
                                 li("nav-item") {
-                                    a(classes = "pure-button", href = locations.href(Video.Index())) { +"Watch" }
+                                    a(classes = "pure-button", href = locations.href(Index())) { +"Watch" }
                                 }
                             }
                         }
@@ -72,8 +87,14 @@ suspend fun ApplicationCall.respondDefaultHtml(versions: List<Version>, visibili
     }
     content.versions = versions
     content.caching = CachingOptions(
-            cacheControl = CacheControl.MaxAge(3600 * 24 * 7, mustRevalidate = true, visibility = visibility, proxyMaxAgeSeconds = null, proxyRevalidate = false),
-            expires = (null as? GMTDate?)
+        cacheControl = CacheControl.MaxAge(
+            3600 * 24 * 7,
+            mustRevalidate = true,
+            visibility = visibility,
+            proxyMaxAgeSeconds = null,
+            proxyRevalidate = false
+        ),
+        expires = (null as? GMTDate?)
     )
     respond(content)
 }

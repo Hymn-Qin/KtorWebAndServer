@@ -1,10 +1,15 @@
 package web
 
+import com.geely.gic.hmi.utils.respondCss
 import io.ktor.application.*
 import io.ktor.http.content.*
 import io.ktor.locations.*
 import io.ktor.response.*
 import io.ktor.routing.*
+import kotlinx.css.Color
+import kotlinx.css.body
+import kotlinx.css.em
+import kotlinx.css.p
 
 @Location("/styles/main.css")
 class MainCss()
@@ -20,5 +25,17 @@ fun Route.styles() {
      */
     get<MainCss> {
         call.respond(call.resolveResource("static/blog.css")!!)
+
+//        call.respondCss {
+//            body {
+//                backgroundColor = Color.red
+//            }
+//            p {
+//                fontSize = 2.em
+//            }
+//            rule("p.myclass") {
+//                color = Color.blue
+//            }
+//        }
     }
 }

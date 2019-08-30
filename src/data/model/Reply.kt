@@ -7,3 +7,10 @@ class Reply<T: Any> (val code: Int, val msg: String, val result: T? = null) {
         return gson.toJson(this)
     }
 }
+
+//data class HttpBinError(
+//        val request: String,
+//        val message: String,
+//        val code: HttpStatusCode,
+//        val cause: Throwable? = null
+//)
