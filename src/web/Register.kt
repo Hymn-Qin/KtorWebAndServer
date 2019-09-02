@@ -9,6 +9,7 @@ import com.geely.gic.hmi.data.model.User
 import com.geely.gic.hmi.security.isUserEmailValid
 import com.geely.gic.hmi.security.userNameValid
 import com.geely.gic.hmi.utils.MultiPartContent
+import com.geely.gic.hmi.utils.address
 import com.geely.gic.hmi.utils.redirect
 import com.geely.gic.hmi.utils.respondDefaultHtml
 import io.ktor.application.application
@@ -163,7 +164,7 @@ fun Route.register(dao: DAOFacade, client: HttpClient, hash: (String) -> String)
                 val hash = hash(password)
                 val newUser = User(userId, email, displayName, hash)
                 val code = async {
-                    val data = client.post<Reply<String>>("http://127.0.0.1:8088/user/register") {
+                    val data = client.post<Reply<String>>(call.address(Users.Register())) {
                         body = MultiPartContent.build {
                             add(Users.Register::userId.name, userId)
                             add(Users.Register::email.name, email)

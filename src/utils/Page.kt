@@ -99,4 +99,9 @@ suspend fun ApplicationCall.respondDefaultHtml(
     respond(content)
 }
 
+@HtmlTagMarker
+fun FlowContent.widget(body: FlowContent.() -> Unit) {
+    div { body() }
+}
+
 

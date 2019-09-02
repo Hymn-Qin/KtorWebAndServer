@@ -17,9 +17,7 @@ import io.ktor.application.call
 import io.ktor.application.log
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
-import io.ktor.http.CacheControl
-import io.ktor.http.HttpStatusCode
-import io.ktor.http.Parameters
+import io.ktor.http.*
 import io.ktor.locations.get
 import io.ktor.locations.post
 import io.ktor.locations.url
@@ -59,7 +57,7 @@ fun Route.login(dao: DAOFacade, client: HttpClient, hash: (String) -> String) {
 
         val user = call.sessions.get<Session>()?.let { dao.user(it.userId) }
         application.log.info("Login GET session:{}", user)
-//        logger.info("Login GET session:{}", user)
+
         if (user != null) {
             call.redirect(Users.UserPage(user.userId))
         } else {
@@ -121,7 +119,8 @@ fun Route.login(dao: DAOFacade, client: HttpClient, hash: (String) -> String) {
             else -> {
                 //如果前后端分离的话 在这做登录
                 val user = async {
-                    val data = client.get<Reply<User>>(call.address(Users.Login(userId = userId, password = password)))
+                    val data = client.get<Reply<User>>(call.address(Users.Login(userId = userId, password = password))) {
+                    }
                     application.log.info("Login POST and Client get Api userId = $userId, reply data:{}", data)
                     if (data.code == HttpStatusCode.OK.value) {
                             data.result

@@ -189,7 +189,6 @@ fun Application.module(testing: Boolean = false) {
 
     val httpClient = HttpClient(Apache) {
         install(JsonFeature)
-
     }
 
     routing {
