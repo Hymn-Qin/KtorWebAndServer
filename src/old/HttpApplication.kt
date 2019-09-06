@@ -1,4 +1,4 @@
-package com.geely.gic.hmi.http
+package com.geely.gic.hmi.old
 
 import com.geely.gic.hmi.data.model.HttpBinError
 import com.geely.gic.hmi.data.model.PostSnippet

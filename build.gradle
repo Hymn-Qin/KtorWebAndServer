@@ -97,6 +97,7 @@ dependencies {
 //    //核心包
 //    compile 'org.apache.logging.log4j:log4j-core:2.12.0'
 
+    compile 'org.kodein.di:kodein-di-generic-jvm:5.2.0'
     /**
      * DB
      */
