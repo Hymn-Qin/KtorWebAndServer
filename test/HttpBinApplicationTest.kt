@@ -1,7 +1,8 @@
-import com.geely.gic.hmi.module
-import io.ktor.application.Application
 import io.ktor.http.HttpMethod
-import io.ktor.server.testing.*
+import io.ktor.server.testing.TestApplicationCall
+import io.ktor.server.testing.TestApplicationEngine
+import io.ktor.server.testing.TestApplicationRequest
+import io.ktor.server.testing.handleRequest
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
