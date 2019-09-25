@@ -4,7 +4,6 @@ import com.geely.gic.hmi.data.dao.userDao
 import com.geely.gic.hmi.data.model.Session
 import com.geely.gic.hmi.security.hashFunction
 import com.geely.gic.hmi.security.hashKey
-import com.geely.gic.hmi.utils.gson
 import freemarker.cache.ClassTemplateLoader
 import io.ktor.application.Application
 import io.ktor.application.install
@@ -190,6 +189,9 @@ fun Application.module(testing: Boolean = false) {
     val httpClient = HttpClient(Apache) {
         install(JsonFeature)
     }
+
+    //拦截器  反向代理
+//    intercept(httpClient)
 
     routing {
 

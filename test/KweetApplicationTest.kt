@@ -1,14 +1,19 @@
 import com.geely.gic.hmi.data.dao.DAOFacade
 import com.geely.gic.hmi.data.model.Kweet
 import com.geely.gic.hmi.data.model.User
-import com.geely.gic.hmi.module
 import com.geely.gic.hmi.security.hash
 import io.ktor.http.*
-import io.ktor.server.testing.*
-import io.mockk.*
-import org.joda.time.*
+import io.ktor.server.testing.TestApplicationEngine
+import io.ktor.server.testing.handleRequest
+import io.ktor.server.testing.setBody
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
+import org.joda.time.DateTime
 import org.junit.Test
-import kotlin.test.*
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 /**
  * Integration tests for the module [mainWithDependencies].
