@@ -11,6 +11,8 @@ import io.ktor.http.content.streamProvider
 import io.ktor.locations.post
 import io.ktor.request.receiveMultipart
 import io.ktor.routing.Route
+import io.ktor.util.hex
+import kotlinx.io.core.readBytes
 import java.io.File
 
 /**
@@ -45,12 +47,17 @@ fun Route.upload(daoCache: DAOVideoCache) {
                         "upload-${System.currentTimeMillis()}-${userId.hashCode()}-${title.hashCode()}.$ext"
                     )
 
+                    //val bytes = part.streamProvider().readBytes()
                     part.streamProvider().use { its ->
                         file.outputStream().buffered().use {
                             its.copyToSuspend(it)
                         }
                     }
                     videoFile = file
+                }
+
+                is PartData.BinaryItem -> {
+                    "BinaryItem(${part.name},${hex(part.provider().readBytes())})"
                 }
             }
             part.dispose()
