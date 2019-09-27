@@ -4,12 +4,16 @@ import com.geely.gic.hmi.data.dao.userDao
 import com.geely.gic.hmi.data.model.Session
 import com.geely.gic.hmi.security.hashFunction
 import com.geely.gic.hmi.security.hashKey
+import com.geely.gic.hmi.utils.registerRedirections
 import freemarker.cache.ClassTemplateLoader
 import io.ktor.application.Application
+import io.ktor.application.ApplicationCallPipeline
 import io.ktor.application.install
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.apache.Apache
 import io.ktor.client.features.json.JsonFeature
+import io.ktor.client.request.HttpRequestBuilder
+import io.ktor.client.request.HttpSendPipeline
 import io.ktor.features.*
 import io.ktor.freemarker.FreeMarker
 import io.ktor.gson.GsonConverter
@@ -30,10 +34,8 @@ import io.ktor.util.KtorExperimentalAPI
 import io.ktor.util.error
 import io.ktor.util.hex
 import io.ktor.websocket.WebSockets
-import web.index
-import web.login
-import web.register
-import web.styles
+import org.slf4j.LoggerFactory
+import web.*
 import java.io.File
 import java.io.IOException
 import java.time.Duration
@@ -168,6 +170,7 @@ fun Application.module(testing: Boolean = false) {
     // Here we handle unhandled exceptions from routes
     install(StatusPages) {
         exception<Throwable> { cause ->
+            environment.log.info("....")
             environment.log.error(cause)
 //            val error = HttpBinError(
 //                code = HttpStatusCode.InternalServerError,
@@ -177,6 +180,7 @@ fun Application.module(testing: Boolean = false) {
 //            )
 //            call.respond(error)
         }
+        registerRedirections()
     }
     //7.安装webSocket
     install(WebSockets) {
@@ -187,7 +191,9 @@ fun Application.module(testing: Boolean = false) {
     val dao = userDao(usersDirPath)
 
     val httpClient = HttpClient(Apache) {
+
         install(JsonFeature)
+        install("Log") { intercept() }
     }
 
     //拦截器  反向代理

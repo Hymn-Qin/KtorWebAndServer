@@ -26,16 +26,16 @@ fun Route.styles() {
     get<MainCss> {
         call.respond(call.resolveResource("static/blog.css")!!)
 
-        call.respondCss {
-            body {
-                backgroundColor = Color.red
-            }
-            p {
-                fontSize = 2.em
-            }
-            rule("p.myclass") {
-                color = Color.blue
-            }
-        }
+//        call.respondCss {
+//            body {
+//                backgroundColor = Color.red
+//            }
+//            p {
+//                fontSize = 2.em
+//            }
+//            rule("p.myclass") {
+//                color = Color.blue
+//            }
+//        }
     }
 }
