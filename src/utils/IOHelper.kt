@@ -64,7 +64,7 @@ suspend fun InputStream.copyToSuspend(
 }
 
 
-fun main(args: Array<String>) {
+fun main0(args: Array<String>) {
     runBlocking {
         val client = HttpClient(Apache) {
             followRedirects = true

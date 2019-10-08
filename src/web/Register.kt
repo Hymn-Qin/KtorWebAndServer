@@ -2,16 +2,12 @@ package web
 
 import com.geely.gic.hmi.Users
 import com.geely.gic.hmi.data.dao.DAOFacade
-import com.geely.gic.hmi.data.model.InvalidAccountException
-import com.geely.gic.hmi.data.model.Reply
+import com.geely.gic.hmi.data.model.Result
 import com.geely.gic.hmi.data.model.Session
 import com.geely.gic.hmi.data.model.User
 import com.geely.gic.hmi.security.isUserEmailValid
 import com.geely.gic.hmi.security.userNameValid
-import com.geely.gic.hmi.utils.MultiPartContent
-import com.geely.gic.hmi.utils.address
-import com.geely.gic.hmi.utils.redirect
-import com.geely.gic.hmi.utils.respondDefaultHtml
+import com.geely.gic.hmi.utils.*
 import io.ktor.application.application
 import io.ktor.application.call
 import io.ktor.application.log
@@ -43,7 +39,7 @@ fun Route.register(dao: DAOFacade, client: HttpClient, hash: (String) -> String)
      */
     get<Users.Register> {
         val user = call.sessions.get<Session>()?.let { dao.user(it.userId) }
-        application.log.info("Register GET session:{}", user)
+        application.log.info("session:{}", user)
         if (user != null) {
             call.redirect(Users.UserPage(user.userId))
         } else {
@@ -124,69 +120,48 @@ fun Route.register(dao: DAOFacade, client: HttpClient, hash: (String) -> String)
     post<Users.Register> {
         // get current from session data if any
         val user = call.sessions.get<Session>()?.let { dao.user(it.userId) }
-        application.log.info("Register POST session:{}", user)
+        application.log.info("session:{}", user)
         // user already logged in? redirect to user page.
-        if (user != null) return@post call.redirect(Users.UserPage(user.userId))
+        if (user != null) call.redirect(Users.UserPage(user.userId))
 
         // receive post data
-        // TODO: use conneg when it's ready and `call.receive<Register>()`
         val post = call.receive<Parameters>()
-        val userId = post["userId"] ?: return@post call.redirect(it.copy(error = "Invalid userId"))
-        val password = post["password"] ?: return@post call.redirect(it.copy(error = "Invalid password"))
-        val displayName = post["displayName"] ?: return@post call.redirect(it.copy(error = "Invalid displayName"))
-        val email = post["email"] ?: return@post call.redirect(it.copy(error = "Invalid email"))
+        val userId = post["userId"] ?: throw Exception()
+        val password = post["password"] ?: throw Exception()
+        val displayName = post["displayName"] ?: throw Exception()
+        val email = post["email"] ?: throw Exception()
 
         // prepare location class for error if any
         val error = Users.Register(userId, displayName, email)
-
         when {
             password.length < 6 -> call.redirect(error.copy(error = "Password should be at least 6 characters long"))
             userId.length < 4 -> call.redirect(error.copy(error = "Login should be at least 4 characters long"))
             !isUserEmailValid(email) -> call.redirect(error.copy(error = "Invalid email"))
             !userNameValid(userId) -> call.redirect(error.copy(error = "Login should be consists of digits, letters, dots or underscores"))
-//            dao.user(userId) != null -> call.redirect(error.copy(error = "User with the following login is already registered"))
             else -> {
-//                val hash = hash(password)
-//                val newUser = User(userId, email, displayName, hash)
-//                try {
-//                    dao.createUser(newUser)
-//                } catch (e: Throwable) {
-//                    when {
-//                        // NOTE: This is security issue that allows to enumerate/verify registered users. Do not do this in real app :)
-//                        dao.user(userId) != null -> call.redirect(error.copy(error = "User with the following login is already registered"))
-//                        dao.userByEmail(email) != null -> call.redirect(error.copy(type = "email", error = "User with the following email $email is already registered"))
-//                        else -> {
-//                            application.log.error("Failed to register user", e)
-//                            call.redirect(error.copy(error = "Failed to register"))
-//                        }
-//                    }
-//                }
-                val hash = hash(password)
-                val newUser = User(userId, email, displayName, hash)
+                val newUser = User(userId, email, displayName, password)
+                //向后端注册
                 val code = async {
-                    val data = client.post<Reply<String>>(call.address(Users.Register())) {
+                    val data = client.post<Result<String>>(urlString = call.address(Users.Register())) {
                         body = MultiPartContent.build {
                             add(Users.Register::userId.name, userId)
                             add(Users.Register::email.name, email)
                             add(Users.Register::displayName.name, displayName)
                             add(Users.Register::password.name, password)
-//                            add("file", byteArrayOf(1, 2, 3, 4), filename = "binary.bin")
                         }
                     }
-                    application.log.info("Register POST and Client post Api userId = $userId, reply data:{}", data)
+                    application.log.info("client post Api userId = $userId, result:{}", data)
                     if (data.code == HttpStatusCode.OK.value) {
                         true
                     } else {
                         call.redirect(error.copy(error = data.msg))
-                        throw InvalidAccountException(data.toString())
                     }
                 }
                 if (code.await()) {
                     call.sessions.set(Session(newUser.userId))
-                    call.redirect(Users.UserPage(newUser.userId))
+                    call.respondRedirect(Users.UserPage(newUser.userId))
                 }
             }
         }
     }
 }
-

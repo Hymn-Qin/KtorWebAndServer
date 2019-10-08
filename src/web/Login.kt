@@ -4,14 +4,13 @@ import com.geely.gic.hmi.Index
 import com.geely.gic.hmi.Users
 import com.geely.gic.hmi.data.dao.DAOFacade
 import com.geely.gic.hmi.data.model.InvalidAccountException
-import com.geely.gic.hmi.data.model.Reply
+import com.geely.gic.hmi.data.model.Result
 import com.geely.gic.hmi.data.model.Session
 import com.geely.gic.hmi.data.model.User
 import com.geely.gic.hmi.security.userNameValid
 import com.geely.gic.hmi.utils.address
 import com.geely.gic.hmi.utils.redirect
 import com.geely.gic.hmi.utils.respondDefaultHtml
-import com.geely.gic.hmi.utils.respondRedirect
 import io.ktor.application.application
 import io.ktor.application.call
 import io.ktor.application.log
@@ -22,7 +21,6 @@ import io.ktor.locations.get
 import io.ktor.locations.post
 import io.ktor.locations.url
 import io.ktor.request.receive
-import io.ktor.response.respondRedirect
 import io.ktor.routing.Route
 import io.ktor.sessions.clear
 import io.ktor.sessions.get
@@ -119,7 +117,7 @@ fun Route.login(dao: DAOFacade, client: HttpClient, hash: (String) -> String) {
             else -> {
                 //如果前后端分离的话 在这做登录
                 val user = async {
-                    val data = client.get<Reply<User>>(call.address(Users.Login(userId = userId, password = password))) {
+                    val data = client.get<Result<User>>(call.address(Users.Login(userId = userId, password = password))) {
                     }
                     application.log.info("Login POST and Client get Api userId = $userId, reply data:{}", data)
                     if (data.code == HttpStatusCode.OK.value) {

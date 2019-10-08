@@ -39,6 +39,11 @@ suspend fun ApplicationCall.respondDefaultHtml(
         val session = sessions.get<Session>()
         head {
             title { +title }
+//            meta {
+//                httpEquiv = "Content-Type"
+//                content = "text/html"
+//                charset = "UTF-8"
+//            }//http-equiv="Content-Type" content="text/html
             styleLink("http://yui.yahooapis.com/pure/0.6.0/pure-min.css")
             styleLink("http://yui.yahooapis.com/pure/0.6.0/grids-responsive-min.css")
             //添加自定义样式

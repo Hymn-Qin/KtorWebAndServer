@@ -7,9 +7,13 @@ import io.ktor.server.engine.applicationEngineEnvironment
 import io.ktor.server.engine.connector
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
+import io.ktor.util.InternalAPI
+import io.ktor.util.StringValues
+import io.ktor.util.StringValuesImpl
 import kotlin.test.*
 
 class ApplicationTest {
+    @InternalAPI
     @Test
     fun testRoot() {
 //        withTestApplication({ chat.module(testing = true) }) {
@@ -18,6 +22,16 @@ class ApplicationTest {
 //                assertEquals("HELLO WORLD!", response.content)
 //            }
 //        }
+        val list: StringValues = StringValuesImpl(values = mapOf("name" to listOf("1")))
+        val name = list.getOrThrow("name")
+        println(name)
+    }
+}
+
+fun StringValues.getOrThrow(name: String): String = get(name).let {
+    when {
+        it.isNullOrBlank() -> throw Exception("Invalid $name")
+        else -> it
     }
 }
 
