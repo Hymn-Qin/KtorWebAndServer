@@ -60,3 +60,4 @@ And navigate to [http://localhost:8080/](http://localhost:8080/) to see the samp
 | /basic-auth + Authorization      | Challenges HTTPBasic Auth.
 | /basic-auth/:user/:passwd        | Challenges HTTPBasic Auth.
 | /hidden-basic-auth/:user/:passwd | 404'd BasicAuth.
+

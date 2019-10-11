@@ -26,6 +26,7 @@ import io.ktor.http.content.static
 import io.ktor.locations.KtorExperimentalLocationsAPI
 import io.ktor.locations.Location
 import io.ktor.locations.Locations
+import io.ktor.network.tls.certificates.generateCertificate
 import io.ktor.routing.routing
 import io.ktor.sessions.SessionTransportTransformerMessageAuthentication
 import io.ktor.sessions.Sessions
@@ -50,8 +51,10 @@ fun main(args: Array<String>): Unit =
 @KtorExperimentalLocationsAPI
 @Suppress("unused") // Referenced in application.conf
 @kotlin.jvm.JvmOverloads
-fun Application.module(testing: Boolean = false) {
-    environment.log.info("Web started")
+fun Application.module(testing: Boolean = true) {
+    environment.log.info("Web started testing:{}", testing)
+
+    if (testing) generateCertificate(File("keystore.jks"))
 
     // Obtains the youkube config key from the application.conf file.
     // Inside that key, we then read several configuration properties
@@ -239,7 +242,8 @@ class Users {
     data class Login(
         val userId: String = "",
         val password: String = "",
-        val error: String? = null)
+        val error: String? = null
+    )
 
     @Location("/register")
     data class Register(
@@ -253,7 +257,8 @@ class Users {
     @Location("/{userId}")
     data class UserPage(
         val userId: String,
-        val error: String? = null)
+        val error: String? = null
+    )
 
     @Location("/logout")
     class Logout()

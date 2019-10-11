@@ -1,7 +1,7 @@
 package com.geely.gic.hmi
 
 import io.ktor.client.HttpClient
-import io.ktor.client.request.HttpSendPipeline
+import io.ktor.client.request.HttpRequestPipeline
 import org.slf4j.LoggerFactory
 
 private val logger = LoggerFactory.getLogger("HttpClient")
@@ -11,7 +11,8 @@ fun HttpClient.intercept(){
 }
 
 fun HttpClient.log() {
-    this.sendPipeline.intercept(HttpSendPipeline.Engine) {
+    this.requestPipeline.intercept(HttpRequestPipeline.Send) {
+
         val msg = context.run { "method:${method.value}  url:${this.url.buildString()}  uri:${url.encodedPath}"  }
         logger.info(msg)
 

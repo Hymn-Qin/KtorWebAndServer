@@ -12,10 +12,9 @@ import io.ktor.application.application
 import io.ktor.application.call
 import io.ktor.application.log
 import io.ktor.client.HttpClient
+import io.ktor.client.call.call
 import io.ktor.client.request.post
-import io.ktor.http.CacheControl
-import io.ktor.http.HttpStatusCode
-import io.ktor.http.Parameters
+import io.ktor.http.*
 import io.ktor.locations.get
 import io.ktor.locations.post
 import io.ktor.locations.url
@@ -149,9 +148,12 @@ fun Route.register(dao: DAOFacade, client: HttpClient, hash: (String) -> String)
                             add(Users.Register::displayName.name, displayName)
                             add(Users.Register::password.name, password)
                         }
+//                        val code = client.execute(this).response.status
+//                        application.log.info("client post httpStatusCode:{}", code)
                     }
+//                    application.log.info("client post httpStatusCode:{}", client.call {  }.response.status)
                     application.log.info("client post Api userId = $userId, result:{}", data)
-                    if (data.code == HttpStatusCode.OK.value) {
+                    if (data.code == 200) {
                         true
                     } else {
                         call.redirect(error.copy(error = data.msg))
